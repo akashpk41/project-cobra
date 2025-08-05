@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐍 Snake Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+
+        .game-board {
+            background: #1a1a2e;
+            border: 4px solid #16213e;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .game-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            border: none;
+        }
+
+        .game-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .game-button:disabled {
+            background: rgba(102, 126, 234, 0.5);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .arrow-button {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            border: none;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+            transition: all 0.2s ease;
+            width: 50px;
+            height: 50px;
+        }
+
+        .arrow-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+        }
+
+        .arrow-button:active {
+            transform: translateY(0);
+            background: linear-gradient(135deg, #44a08d, #4ecdc4);
+        }
+
+        .footer-link {
+            color: #4ecdc4;
+            transition: all 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-md mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-4xl font-bold text-white mb-2">🐍 Snake Game</h1>
+            <p class="text-purple-200">Control with arrows or touch!</p>
+        </div>
+
+
+            <!-- Speed Level -->
+            <div class="text-center bg-white bg-opacity-20 rounded-lg p-2 mb-4">
+                <h3 class="text-white font-bold mb-1">Speed Level <span class="text-2xl font-bold text-yellow-300" id="speedLevel">1</span></h3>
+
+            </div>
+
+            <!-- Score Board -->
+            <div class="score-card p-4 mb-4 text-white">
+                <div class="flex justify-between items-center">
+                    <div class="text-center flex-1">
+                        <h3 class="font-bold mb-1">Score</h3>
+                        <div class="text-2xl font-bold" id="currentScore">0</div>
+                    </div>
+                    <div class="w-px h-12 bg-white opacity-30"></div>
+                    <div class="text-center flex-1">
+                        <h3 class="font-bold mb-1">High Score</h3>
+                        <div class="text-2xl font-bold text-yellow-200" id="highScore">0</div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        <!-- Game Board -->
+        <div class="flex justify-center mb-6">
+            <canvas id="gameCanvas" class="game-board" width="320" height="320"></canvas>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel p-6 space-y-6">
+
+            <!-- Arrow Keys -->
+            <div class="text-center">
+                <h3 class="text-white font-bold mb-3">Controls</h3>
+                <div class="grid grid-cols-3 gap-3 w-40 mx-auto">
+                    <div></div>
+                    <button id="upBtn" class="arrow-button text-white font-bold rounded-lg text-2xl">↑</button>
+                    <div></div>
+                    <button id="leftBtn" class="arrow-button text-white font-bold rounded-lg text-2xl">←</button>
+                    <div></div>
+                    <button id="rightBtn" class="arrow-button text-white font-bold rounded-lg text-2xl">→</button>
+                    <div></div>
+                    <button id="downBtn" class="arrow-button text-white font-bold rounded-lg text-2xl">↓</button>
+                    <div></div>
+                </div>
+            </div>
+
+            <!-- Start Button -->
+            <div class="text-center">
+                <button id="startBtn" class="game-button text-white font-bold py-3 px-8 rounded-lg text-lg pulse-animation">
+                    🎮 Start Game
+                </button>
+            </div>
+
+            <!-- Pause & Restart Buttons -->
+            <div class="flex gap-3">
+                <button id="pauseBtn" class="game-button text-white font-bold py-2 px-4 rounded-lg flex-1" disabled>
+                    ⏸️ Pause
+                </button>
+                <button id="restartBtn" class="game-button text-white font-bold py-2 px-4 rounded-lg flex-1">
+                    🔄 Restart
+                </button>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <h3 class="text-white font-bold mb-3 text-center">📖 How to Play</h3>
+                <ul class="text-white text-sm space-y-2">
+                    <li>🎯 <strong>Goal:</strong> Eat red food to grow your snake</li>
+                    <li>⚠️ <strong>Avoid:</strong> Hitting walls or your own body</li>
+                    <li>🎮 <strong>Controls:</strong> Use arrows above or keyboard</li>
+                    <li>⚡ <strong>Speed:</strong> Game gets faster as you score more</li>
+                    <li>🏆 <strong>Score:</strong> Each food gives you 10 points</li>
+                </ul>
+            </div>
+
+            <!-- Keyboard Shortcuts -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-3">
+                <h4 class="text-white font-bold mb-2 text-sm">Keyboard Shortcuts:</h4>
+                <div class="text-white text-xs space-y-1">
+                    <div>🔹 Arrow Keys or WASD - Move snake</div>
+                    <div>🔹 Space - Pause/Resume</div>
+                    <div>🔹 Enter - Start/Restart game</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 mt-6">
+        <div class="control-panel p-4 max-w-md mx-auto">
+            <p class="text-white font-bold mb-3">Created by <span class="text-yellow-300">Akash PK</span></p>
+            <div class="flex justify-center space-x-6">
+                <a href="https://github.com/akashpk41" target="_blank" class="footer-link flex items-center space-x-2">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.530.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    <span>GitHub</span>
+                </a>
+                <a href="https://www.facebook.com/atapk41/" target="_blank" class="footer-link flex items-center space-x-2">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    <span>Facebook</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Audio Elements -->
+    <audio id="moveSound" preload="auto">
+        <source src="sound-effects/arrow.mp3" type="audio/wav">
+    </audio>
+    <audio id="eatSound" preload="auto">
+        <source src="sound-effects/eat.mp3" type="audio/wav">
+    </audio>
+    <audio id="gameOverSound" preload="auto">
+        <source src="sound-effects/over.mp3" type="audio/wav">
+    </audio>
+
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 max-w-sm mx-4 text-center transform scale-95 transition-transform">
+            <div class="text-5xl mb-3">💀</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Game Over!</h2>
+            <p class="text-gray-600 mb-4">Better luck next time!</p>
+            <div class="bg-red-100 rounded-lg p-3 mb-4">
+                <div class="text-sm text-red-600 mb-1">Final Score</div>
+                <div class="text-2xl font-bold text-red-800" id="finalScore">0</div>
+                <div class="text-sm text-green-600 mt-2 font-bold" id="newHighScore" style="display: none;">
+                    🎉 New High Score! 🎉
+                </div>
+            </div>
+            <button id="playAgainBtn" class="game-button text-white font-bold py-3 px-6 rounded-lg">
+                🎮 Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        class SnakeGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.gridSize = 16;
+                this.tileCount = this.canvas.width / this.gridSize;
+
+                // Game state
+                this.snake = [{ x: 10, y: 10 }];
+                this.food = this.generateFood();
+                this.dx = 0;
+                this.dy = 0;
+                this.score = 0;
+                this.gameRunning = false;
+                this.gamePaused = false;
+                this.baseSpeed = 200;
+                this.currentSpeed = this.baseSpeed;
+                this.speedLevel = 1;
+                this.gameLoopId = null;
+
+                // Audio elements
+                this.moveSound = document.getElementById('moveSound');
+                this.eatSound = document.getElementById('eatSound');
+                this.gameOverSound = document.getElementById('gameOverSound');
+
+                // Load high score
+                this.highScore = parseInt(localStorage.getItem('snakeHighScore') || '0');
+                this.updateDisplay();
+
+                this.setupEventListeners();
+                this.draw(); // Initial draw
+            }
+
+            setupEventListeners() {
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+
+                // Button controls
+                document.getElementById('startBtn').addEventListener('click', () => this.startGame());
+                document.getElementById('pauseBtn').addEventListener('click', () => this.togglePause());
+                document.getElementById('restartBtn').addEventListener('click', () => this.restartGame());
+                document.getElementById('playAgainBtn').addEventListener('click', () => this.restartGame());
+
+                // Touch controls
+                document.getElementById('upBtn').addEventListener('click', () => this.changeDirection(0, -1));
+                document.getElementById('downBtn').addEventListener('click', () => this.changeDirection(0, 1));
+                document.getElementById('leftBtn').addEventListener('click', () => this.changeDirection(-1, 0));
+                document.getElementById('rightBtn').addEventListener('click', () => this.changeDirection(1, 0));
+
+                // Prevent context menu on touch controls
+                ['upBtn', 'downBtn', 'leftBtn', 'rightBtn'].forEach(id => {
+                    document.getElementById(id).addEventListener('contextmenu', e => e.preventDefault());
+                });
+
+                // Modal click outside to close
+                document.getElementById('gameOverModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'gameOverModal') {
+                        this.hideGameOverModal();
+                    }
+                });
+            }
+
+            handleKeyPress(e) {
+                if (!this.gameRunning && !this.gamePaused) {
+                    if (e.code === 'Enter') {
+                        e.preventDefault();
+                        this.startGame();
+                        return;
+                    }
+                }
+
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    this.togglePause();
+                    return;
+                }
+
+                if (!this.gameRunning || this.gamePaused) return;
+
+                switch(e.code) {
+                    case 'ArrowUp':
+                    case 'KeyW':
+                        e.preventDefault();
+                        this.changeDirection(0, -1);
+                        break;
+                    case 'ArrowDown':
+                    case 'KeyS':
+                        e.preventDefault();
+                        this.changeDirection(0, 1);
+                        break;
+                    case 'ArrowLeft':
+                    case 'KeyA':
+                        e.preventDefault();
+                        this.changeDirection(-1, 0);
+                        break;
+                    case 'ArrowRight':
+                    case 'KeyD':
+                        e.preventDefault();
+                        this.changeDirection(1, 0);
+                        break;
+                }
+            }
+
+            changeDirection(newDx, newDy) {
+                // Prevent reversing into itself
+                if (this.snake.length > 1 && this.dx === -newDx && this.dy === -newDy) return;
+
+                this.dx = newDx;
+                this.dy = newDy;
+
+                // Play move sound
+                this.playSound(this.moveSound);
+
+                // Auto start game on first move
+                if (!this.gameRunning && !this.gamePaused) {
+                    this.startGame();
+                }
+            }
+
+            startGame() {
+                if (this.gameRunning) return;
+
+                this.gameRunning = true;
+                this.gamePaused = false;
+                this.updateButtonStates();
+                this.hideGameOverModal();
+                this.gameLoop();
+
+                // Remove pulse animation from start button
+                document.getElementById('startBtn').classList.remove('pulse-animation');
+            }
+
+            togglePause() {
+                if (!this.gameRunning) return;
+
+                this.gamePaused = !this.gamePaused;
+                this.updateButtonStates();
+
+                if (!this.gamePaused) {
+                    this.gameLoop();
+                }
+            }
+
+            restartGame() {
+                // Clear existing game loop
+                if (this.gameLoopId) {
+                    clearTimeout(this.gameLoopId);
+                    this.gameLoopId = null;
+                }
+
+                this.snake = [{ x: 10, y: 10 }];
+                this.food = this.generateFood();
+                this.dx = 0;
+                this.dy = 0;
+                this.score = 0;
+                this.currentSpeed = this.baseSpeed;
+                this.speedLevel = 1;
+                this.gameRunning = false;
+                this.gamePaused = false;
+                this.updateDisplay();
+                this.updateButtonStates();
+                this.hideGameOverModal();
+                this.draw();
+
+                // Add pulse animation back to start button
+                document.getElementById('startBtn').classList.add('pulse-animation');
+            }
+
+            generateFood() {
+                let newFood;
+                do {
+                    newFood = {
+                        x: Math.floor(Math.random() * this.tileCount),
+                        y: Math.floor(Math.random() * this.tileCount)
+                    };
+                } while (this.snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
+                return newFood;
+            }
+
+            update() {
+                if (!this.gameRunning || this.gamePaused) return;
+
+                // Don't move if no direction set
+                if (this.dx === 0 && this.dy === 0) return;
+
+                // Move snake head
+                const head = { x: this.snake[0].x + this.dx, y: this.snake[0].y + this.dy };
+
+                // Check wall collision
+                if (head.x < 0 || head.x >= this.tileCount || head.y < 0 || head.y >= this.tileCount) {
+                    this.gameOver();
+                    return;
+                }
+
+                // Check self collision
+                if (this.snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+                    this.gameOver();
+                    return;
+                }
+
+                this.snake.unshift(head);
+
+                // Check food collision
+                if (head.x === this.food.x && head.y === this.food.y) {
+                    this.score += 10;
+                    this.food = this.generateFood();
+                    this.updateSpeed();
+                    // Play eat sound
+                    this.playSound(this.eatSound);
+                } else {
+                    this.snake.pop();
+                }
+
+                this.updateDisplay();
+            }
+
+            updateSpeed() {
+                // Increase speed every 30 points
+                const newSpeedLevel = Math.floor(this.score / 30) + 1;
+                if (newSpeedLevel > this.speedLevel) {
+                    this.speedLevel = newSpeedLevel;
+                    this.currentSpeed = Math.max(80, this.baseSpeed - (this.speedLevel - 1) * 15);
+                }
+            }
+
+            gameOver() {
+                this.gameRunning = false;
+                this.gamePaused = false;
+
+                if (this.gameLoopId) {
+                    clearTimeout(this.gameLoopId);
+                    this.gameLoopId = null;
+                }
+
+                // Play game over sound
+                this.playSound(this.gameOverSound);
+
+                // Update high score
+                if (this.score > this.highScore) {
+                    this.highScore = this.score;
+                    localStorage.setItem('snakeHighScore', this.highScore.toString());
+                    document.getElementById('newHighScore').style.display = 'block';
+                } else {
+                    document.getElementById('newHighScore').style.display = 'none';
+                }
+
+                this.updateDisplay();
+                this.updateButtonStates();
+                this.showGameOverModal();
+
+                // Add pulse animation back to start button
+                document.getElementById('startBtn').classList.add('pulse-animation');
+            }
+
+            showGameOverModal() {
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('gameOverModal').classList.remove('hidden');
+                setTimeout(() => {
+                    document.querySelector('#gameOverModal > div').style.transform = 'scale(1)';
+                }, 10);
+            }
+
+            hideGameOverModal() {
+                document.querySelector('#gameOverModal > div').style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    document.getElementById('gameOverModal').classList.add('hidden');
+                }, 150);
+            }
+
+            draw() {
+                // Clear canvas with dark background
+                this.ctx.fillStyle = '#1a1a2e';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw subtle grid
+                this.ctx.strokeStyle = '#16213e';
+                this.ctx.lineWidth = 0.5;
+                for (let i = 0; i <= this.tileCount; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(i * this.gridSize, 0);
+                    this.ctx.lineTo(i * this.gridSize, this.canvas.height);
+                    this.ctx.stroke();
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, i * this.gridSize);
+                    this.ctx.lineTo(this.canvas.width, i * this.gridSize);
+                    this.ctx.stroke();
+                }
+
+                // Draw snake
+                this.snake.forEach((segment, index) => {
+                    if (index === 0) {
+                        // Snake head - brighter green
+                        this.ctx.fillStyle = '#4ecdc4';
+                    } else {
+                        // Snake body - darker green
+                        this.ctx.fillStyle = '#44a08d';
+                    }
+
+                    this.ctx.fillRect(
+                        segment.x * this.gridSize + 1,
+                        segment.y * this.gridSize + 1,
+                        this.gridSize - 2,
+                        this.gridSize - 2
+                    );
+
+                    // Add shine to head
+                    if (index === 0) {
+                        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                        this.ctx.fillRect(
+                            segment.x * this.gridSize + 2,
+                            segment.y * this.gridSize + 2,
+                            this.gridSize - 6,
+                            this.gridSize - 6
+                        );
+                    }
+                });
+
+                // Draw food
+                this.ctx.fillStyle = '#ff6b6b';
+                this.ctx.beginPath();
+                this.ctx.arc(
+                    this.food.x * this.gridSize + this.gridSize / 2,
+                    this.food.y * this.gridSize + this.gridSize / 2,
+                    this.gridSize / 2 - 2,
+                    0,
+                    2 * Math.PI
+                );
+                this.ctx.fill();
+
+                // Add glow to food
+                this.ctx.shadowColor = '#ff6b6b';
+                this.ctx.shadowBlur = 8;
+                this.ctx.fill();
+                this.ctx.shadowBlur = 0;
+
+                // Draw pause overlay
+                if (this.gamePaused) {
+                    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.font = 'bold 24px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText('PAUSED', this.canvas.width / 2, this.canvas.height / 2);
+                    this.ctx.font = '14px Arial';
+                    this.ctx.fillText('Tap Resume to continue', this.canvas.width / 2, this.canvas.height / 2 + 30);
+                }
+            }
+
+            updateDisplay() {
+                document.getElementById('currentScore').textContent = this.score;
+                document.getElementById('highScore').textContent = this.highScore;
+                document.getElementById('speedLevel').textContent = this.speedLevel;
+            }
+
+            updateButtonStates() {
+                const startBtn = document.getElementById('startBtn');
+                const pauseBtn = document.getElementById('pauseBtn');
+
+                if (!this.gameRunning) {
+                    startBtn.textContent = '🎮 Start Game';
+                    startBtn.disabled = false;
+                    pauseBtn.disabled = true;
+                    pauseBtn.textContent = '⏸️ Pause';
+                } else if (this.gamePaused) {
+                    startBtn.disabled = true;
+                    pauseBtn.disabled = false;
+                    pauseBtn.textContent = '▶️ Resume';
+                } else {
+                    startBtn.disabled = true;
+                    pauseBtn.disabled = false;
+                    pauseBtn.textContent = '⏸️ Pause';
+                }
+            }
+
+            gameLoop() {
+                if (!this.gameRunning || this.gamePaused) return;
+
+                this.update();
+                this.draw();
+                this.gameLoopId = setTimeout(() => this.gameLoop(), this.currentSpeed);
+            }
+
+            playSound(audioElement) {
+                try {
+                    audioElement.currentTime = 0;
+                    audioElement.volume = 0.3; // Set volume to 30%
+                    audioElement.play().catch(e => {
+                        // Ignore audio play errors (user hasn't interacted with page yet)
+                        console.log('Audio play prevented:', e.message);
+                    });
+                } catch (error) {
+                    // Silently handle audio errors
+                    console.log('Audio error:', error.message);
+                }
+            }
+        }
+
+        // Initialize game when page loads
+        window.addEventListener('load', () => {
+            new SnakeGame();
+        });
+    </script>
+</body>
+</html>
