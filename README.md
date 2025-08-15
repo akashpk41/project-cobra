@@ -34,15 +34,6 @@
 
 </div>
 
-<div style="border: 2px solid #33ccff; border-radius: 10px; padding: 10px; margin-bottom: 20px;">
-  
-### 🎥 Gameplay Demo (GIF)  
-![Gameplay Demo](https://i.ibb.co.com/fGZ6j4Hn/Screenshot-183.png)
-
-</div>
-
----
-
 ## 🌟 Features
 
 ✅ **Responsive Design** – মোবাইল, ট্যাব, ডেস্কটপে খেলা যাবে 📱💻  
