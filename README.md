@@ -7,7 +7,7 @@
 [![Live Site](https://img.shields.io/badge/🌍_Play_Now-Click_Here-ff69b4?style=for-the-badge)](https://akashpk41.github.io/project-cobra/)
 [![GitHub Repo](https://img.shields.io/badge/💻_Source_Code-GitHub-blue?style=for-the-badge)](https://github.com/akashpk41/project-cobra)
 [![Made with JavaScript](https://img.shields.io/badge/Made_with-JavaScript-yellow?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-[![CSS3](https://img.shields.io/badge/Style-CSS3-blue?style=for-the-badge&logo=css3)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+[![Tailwind CSS](https://img.shields.io/badge/Style-CSS3-blue?style=for-the-badge&logo=css3)](https://tailwindcss.com/docs/installation/using-vite)
 
 ---
 
@@ -68,7 +68,7 @@
 | Technology | Purpose |
 |------------|---------|
 | ⚛️ **JavaScript** | Game Logic |
-| 🎨 **CSS3** | Styling |
+| 🎨 **Tailwind CSS** | Styling |
 | 🏗 **HTML5** | Structure |
 | 🚀 **GitHub Pages** | Hosting |
 
